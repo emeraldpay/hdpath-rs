@@ -1,0 +1,14 @@
+[package]
+name = "hdpath"
+description = "Hierarchical Deterministic Path (BIP32, BIP43, BIP44, BIP49, BIP84)"
+version = "0.1.0"
+authors = ["Igor Artamonov <igor@artamonov.ru>"]
+edition = "2018"
+readme = "crates.md"
+license = "Apache-2.0"
+repository = "https://github.com/emeraldpay/hdpath-rs"
+documentation = "https://docs.rs/hdpath"
+
+[lib]
+name = "hdpath"
+path = "src/lib.rs"
