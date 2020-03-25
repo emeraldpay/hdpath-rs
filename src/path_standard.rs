@@ -31,31 +31,56 @@ pub struct StandardHDPath {
 }
 
 impl StandardHDPath {
+    /// Create a standard HD Path. Panics if any of the values is incorrect
+    ///```
+    ///use hdpath::{StandardHDPath, Purpose};
+    ///
+    ///let hdpath =  StandardHDPath::new(Purpose::Witness, 0, 2, 0, 0);
+    ///```
     pub fn new(purpose: Purpose, coin_type: u32, account: u32, change: u32, index: u32) -> StandardHDPath {
+        match StandardHDPath::try_new(purpose, coin_type, account, change, index) {
+            Ok(path) => path,
+            Err(err) => panic!("Invalid {}: {}", err.0, err.1)
+        }
+    }
+
+    ///Try to create a standard HD Path.
+    ///Return error `(field_name, invalid_value)` if ant field is incorrect.
+    ///```
+    ///use hdpath::{StandardHDPath, Purpose};
+    ///
+    ///
+    ///let index = 0x80000100; //received from unreliable source
+    ///match StandardHDPath::try_new(Purpose::Witness, 0, 2, 0, index) {
+    ///    Ok(hdpath) => { }
+    ///    Err(err) => println!("Invalid value {} = {}", err.0, err.1)
+    ///}
+    ///```
+    pub fn try_new(purpose: Purpose, coin_type: u32, account: u32, change: u32, index: u32) -> Result<StandardHDPath, (String, u32)> {
         if let Purpose::Custom(n) = purpose {
             if !PathValue::is_ok(n) {
-                panic!("Invalid purpose: {}", n);
+                return Err(("purpose".to_string(), n));
             }
         }
         if !PathValue::is_ok(coin_type) {
-            panic!("Invalid coin_type: {}", coin_type);
+            return Err(("coin_type".to_string(), coin_type));
         }
         if !PathValue::is_ok(account) {
-            panic!("Invalid account: {}", account);
+            return Err(("account".to_string(), account));
         }
         if !PathValue::is_ok(change) {
-            panic!("Invalid change: {}", change);
+            return Err(("change".to_string(), change));
         }
         if !PathValue::is_ok(index) {
-            panic!("Invalid index: {}", index);
+            return Err(("index".to_string(), index));
         }
-        StandardHDPath {
+        Ok(StandardHDPath {
             purpose,
             coin_type,
             account,
             change,
-            index
-        }
+            index,
+        })
     }
 
     pub fn purpose(&self) -> &Purpose {
@@ -282,5 +307,53 @@ mod tests {
 
         assert!(path1 < path2);
         assert!(path2 < path3);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn panic_to_create_invalid_coin() {
+        StandardHDPath::new(Purpose::Pubkey, 0x80000000, 0, 0, 1);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn panic_to_create_invalid_account() {
+        StandardHDPath::new(Purpose::Pubkey, 0, 0x80000000, 0, 1);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn panic_to_create_invalid_change() {
+        StandardHDPath::new(Purpose::Pubkey, 0, 0, 0x80000000, 1);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn panic_to_create_invalid_index() {
+        StandardHDPath::new(Purpose::Pubkey, 0, 0, 0, 0x80000000);
+    }
+
+    #[test]
+    pub fn err_to_create_invalid_coin() {
+        let act = StandardHDPath::try_new(Purpose::Pubkey, 2147483692, 0, 0, 1);
+        assert_eq!(act, Err(("coin_type".to_string(), 2147483692)))
+    }
+
+    #[test]
+    pub fn err_to_create_invalid_account() {
+        let act = StandardHDPath::try_new(Purpose::Pubkey, 60, 2147483792, 0, 1);
+        assert_eq!(act, Err(("account".to_string(), 2147483792)))
+    }
+
+    #[test]
+    pub fn err_to_create_invalid_change() {
+        let act = StandardHDPath::try_new(Purpose::Pubkey, 61, 0, 2147484692, 1);
+        assert_eq!(act, Err(("change".to_string(), 2147484692)))
+    }
+
+    #[test]
+    pub fn err_to_create_invalid_index() {
+        let act = StandardHDPath::try_new(Purpose::Pubkey, 0, 0, 0, 2474893692);
+        assert_eq!(act, Err(("index".to_string(), 2474893692)))
     }
 }
