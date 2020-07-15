@@ -1,5 +1,6 @@
 use crate::{Purpose, PathValue, Error, CustomHDPath};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
+use byteorder::{WriteBytesExt, BigEndian};
 
 /// Standard HD Path for [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki),
 /// [BIP-49](https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki), [BIP-84](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki)
@@ -102,6 +103,39 @@ impl StandardHDPath {
     pub fn index(&self) -> u32 {
         self.index
     }
+
+    /// Encode as bytes, where first byte is number of elements in path (always 5 for StandardHDPath)
+    /// following by 4-byte BE values
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut buf = Vec::with_capacity(1 + 4 * 5);
+        buf.push(5u8);
+        buf.write_u32::<BigEndian>(self.purpose.as_value().to_raw()).unwrap();
+        buf.write_u32::<BigEndian>(PathValue::Hardened(self.coin_type).to_raw()).unwrap();
+        buf.write_u32::<BigEndian>(PathValue::Hardened(self.account).to_raw()).unwrap();
+        buf.write_u32::<BigEndian>(PathValue::Normal(self.change).to_raw()).unwrap();
+        buf.write_u32::<BigEndian>(PathValue::Normal(self.index).to_raw()).unwrap();
+        buf
+    }
+
+    /// Decode from bytes, where first byte is number of elements in path (always 5 for StandardHDPath)
+    /// following by 4-byte BE values
+    pub fn from_bytes(path: &[u8]) -> Result<Self, Error> {
+        if path.len() != 1 + 4 * 5 {
+            return Err(Error::InvalidFormat);
+        }
+        if path[0] != 5u8 {
+            return Err(Error::InvalidFormat);
+        }
+
+        let hdpath = StandardHDPath::try_new(
+            Purpose::try_from(PathValue::from_raw(u32::from_be_bytes(path[1..5].try_into().unwrap())))?,
+            PathValue::from_raw(u32::from_be_bytes(path[5..9].try_into().unwrap())).as_number(),
+            PathValue::from_raw(u32::from_be_bytes(path[9..13].try_into().unwrap())).as_number(),
+            PathValue::from_raw(u32::from_be_bytes(path[13..17].try_into().unwrap())).as_number(),
+            PathValue::from_raw(u32::from_be_bytes(path[17..21].try_into().unwrap())).as_number(),
+        );
+        hdpath.map_err(|_| Error::InvalidFormat)
+    }
 }
 
 impl Default for StandardHDPath {
@@ -187,6 +221,7 @@ impl ToString for StandardHDPath {
 mod tests {
     use super::*;
     use std::convert::TryFrom;
+    use rand::{thread_rng, Rng};
 
     #[test]
     pub fn from_custom() {
@@ -356,4 +391,217 @@ mod tests {
         let act = StandardHDPath::try_new(Purpose::Pubkey, 0, 0, 0, 2474893692);
         assert_eq!(act, Err(("index".to_string(), 2474893692)))
     }
+
+    #[test]
+    pub fn convert_to_bytes_base() {
+        let exp: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 0,
+            0x80, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ];
+
+        let parsed = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
+        assert_eq!(parsed.to_bytes(), exp)
+    }
+
+    #[test]
+    pub fn convert_from_bytes_base() {
+        let data: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 0,
+            0x80, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ];
+
+        assert_eq!(StandardHDPath::from_bytes(&data).unwrap(),
+                   StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap())
+    }
+
+    #[test]
+    pub fn convert_to_bytes_large_account() {
+        let exp: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 60,
+            0x80, 0x02, 0x73, 0xd0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ];
+
+        let parsed = StandardHDPath::try_from("m/44'/60'/160720'/0/0").unwrap();
+        assert_eq!(parsed.to_bytes(), exp)
+    }
+
+    #[test]
+    pub fn convert_from_bytes_large_account() {
+        let data: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 60,
+            0x80, 0x02, 0x73, 0xd0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ];
+
+        assert_eq!(StandardHDPath::from_bytes(&data).unwrap(),
+                   StandardHDPath::try_from("m/44'/60'/160720'/0/0").unwrap())
+    }
+
+    #[test]
+    fn convert_to_bytes_witness() {
+        let exp: [u8; 21] = [
+            5,
+            0x80, 0, 0, 84,
+            0x80, 0, 0, 0,
+            0x80, 0, 0, 2,
+            0, 0, 0, 0,
+            0, 0, 0, 101,
+        ];
+
+        let parsed = StandardHDPath::try_from("m/84'/0'/2'/0/101").unwrap();
+        assert_eq!(parsed.to_bytes(), exp)
+    }
+
+    #[test]
+    pub fn convert_from_bytes_large_witness() {
+        let data: [u8; 21] = [
+            5,
+            0x80, 0, 0, 84,
+            0x80, 0, 0, 0,
+            0x80, 0, 0, 2,
+            0, 0, 0, 0,
+            0, 0, 0, 101,
+        ];
+
+        assert_eq!(StandardHDPath::from_bytes(&data).unwrap(),
+                   StandardHDPath::try_from("m/84'/0'/2'/0/101").unwrap())
+    }
+
+    #[test]
+    fn convert_to_bytes_change() {
+        let exp: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 0,
+            0x80, 0, 0, 5,
+            0, 0, 0, 1,
+            0, 0, 0, 7,
+        ];
+
+        let parsed = StandardHDPath::try_from("m/44'/0'/5'/1/7").unwrap();
+        assert_eq!(parsed.to_bytes(), exp)
+    }
+
+    #[test]
+    pub fn convert_from_bytes_change() {
+        let data: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 0,
+            0x80, 0, 0, 5,
+            0, 0, 0, 1,
+            0, 0, 0, 7,
+        ];
+
+        assert_eq!(StandardHDPath::from_bytes(&data).unwrap(),
+                   StandardHDPath::try_from("m/44'/0'/5'/1/7").unwrap())
+    }
+
+    #[test]
+    fn convert_to_bytes_index() {
+        let exp: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 60,
+            0x80, 0x02, 0x73, 0xd0,
+            0, 0, 0, 0,
+            0, 0, 0x02, 0x45,
+        ];
+
+        let parsed = StandardHDPath::try_from("m/44'/60'/160720'/0/581").unwrap();
+        assert_eq!(parsed.to_bytes(), exp)
+    }
+
+    #[test]
+    pub fn convert_from_bytes_index() {
+        let data: [u8; 21] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 60,
+            0x80, 0x02, 0x73, 0xd0,
+            0, 0, 0, 0,
+            0, 0, 0x02, 0x45,
+        ];
+
+        assert_eq!(StandardHDPath::from_bytes(&data).unwrap(),
+                   StandardHDPath::try_from("m/44'/60'/160720'/0/581").unwrap())
+    }
+
+    #[test]
+    pub fn cannot_convert_from_short_bytes() {
+        let data: [u8; 17] = [
+            5,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 60,
+            0x80, 0x02, 0x73, 0xd0,
+            0, 0, 0, 0,
+        ];
+
+        assert!(StandardHDPath::from_bytes(&data).is_err())
+    }
+
+    #[test]
+    pub fn cannot_convert_from_invalid_prefix() {
+        let data: [u8; 21] = [
+            4,
+            0x80, 0, 0, 44,
+            0x80, 0, 0, 60,
+            0x80, 0x02, 0x73, 0xd0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ];
+
+        assert!(StandardHDPath::from_bytes(&data).is_err())
+    }
+
+    #[test]
+    pub fn test_random_conversion() {
+        let range = |count: usize| {
+            let mut rng = thread_rng();
+            let mut result: Vec<u32> = Vec::with_capacity(count);
+            for _i in 0..count {
+                result.push(rng.gen_range(0u32, 0x80000000u32));
+            }
+            result
+        };
+
+        for purpose in [Purpose::Pubkey, Purpose::ScriptHash, Purpose::Witness, Purpose::Custom(101), Purpose::Custom(0x11223344)].iter() {
+            for coin_type in [0u32, 60, 61, 1001, 0x01234567].iter() {
+                for account in range(100) {
+                    for change in 0..1 {
+                        for index in range(1000) {
+                            let orig = StandardHDPath::new(
+                                purpose.clone(), *coin_type, account,
+                                change, index
+                            );
+                            let bytes = orig.to_bytes();
+                            let parsed = StandardHDPath::from_bytes(&bytes).expect("Should parse");
+                            assert_eq!(
+                                parsed, orig,
+                                "test m/{}'/{}'/{}'/{}/{}", purpose.as_value().as_number(), coin_type, account, change, index
+                            )
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+
 }

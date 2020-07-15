@@ -68,6 +68,8 @@
 //! }
 //! ```
 //!
+extern crate byteorder;
+
 mod errors;
 mod path_custom;
 mod path_short;

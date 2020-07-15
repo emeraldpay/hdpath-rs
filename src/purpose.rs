@@ -92,6 +92,14 @@ impl TryFrom<i32> for Purpose {
     }
 }
 
+impl TryFrom<PathValue> for Purpose {
+    type Error = Error;
+
+    fn try_from(value: PathValue) -> Result<Self, Self::Error> {
+        Purpose::try_from(value.as_number())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
