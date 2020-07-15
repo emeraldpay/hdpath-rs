@@ -1,5 +1,7 @@
 use crate::{Purpose, CustomHDPath, Error, PathValue};
 use std::convert::TryFrom;
+#[cfg(feature = "with-bitcoin")]
+use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ShortHDPath {
@@ -58,6 +60,44 @@ impl ToString for ShortHDPath {
     }
 }
 
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<&ShortHDPath> for Vec<ChildNumber> {
+    fn from(value: &ShortHDPath) -> Self {
+        let result = [
+            ChildNumber::from_hardened_idx(value.purpose.as_value().as_number())
+                .expect("Purpose is not Hardened"),
+            ChildNumber::from_hardened_idx(value.coin_type)
+                .expect("Coin Type is not Hardened"),
+            ChildNumber::from_hardened_idx(value.account)
+                .expect("Account is not Hardened"),
+            ChildNumber::from_normal_idx(value.index)
+                .expect("Index is Hardened"),
+        ];
+        return result.to_vec();
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<ShortHDPath> for Vec<ChildNumber> {
+    fn from(value: ShortHDPath) -> Self {
+        Vec::<ChildNumber>::from(&value)
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<ShortHDPath> for DerivationPath {
+    fn from(value: ShortHDPath) -> Self {
+        DerivationPath::from(Vec::<ChildNumber>::from(&value))
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<&ShortHDPath> for DerivationPath {
+    fn from(value: &ShortHDPath) -> Self {
+        DerivationPath::from(Vec::<ChildNumber>::from(value))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,4 +136,23 @@ mod tests {
             assert_eq!(p, ShortHDPath::try_from(p).unwrap().to_string())
         }
     }
+}
+
+#[cfg(all(test, feature = "with-bitcoin"))]
+mod tests_with_bitcoin {
+    use super::*;
+    use std::convert::TryFrom;
+    use bitcoin::util::bip32::ChildNumber;
+
+    #[test]
+    pub fn convert_to_childnumbers() {
+        let hdpath = ShortHDPath::try_from("m/44'/60'/2'/100").unwrap();
+        let childs: Vec<ChildNumber> = hdpath.into();
+        assert_eq!(childs.len(), 4);
+        assert_eq!(childs[0], ChildNumber::from_hardened_idx(44).unwrap());
+        assert_eq!(childs[1], ChildNumber::from_hardened_idx(60).unwrap());
+        assert_eq!(childs[2], ChildNumber::from_hardened_idx(2).unwrap());
+        assert_eq!(childs[3], ChildNumber::from_normal_idx(100).unwrap());
+    }
+
 }

@@ -1,5 +1,7 @@
 use crate::{PathValue, Error};
 use std::convert::TryFrom;
+#[cfg(feature = "with-bitcoin")]
+use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 
 /// A custom HD Path, that can be any length and contain any Hardened and non-Hardened values in
 /// any order. Direct implementation for [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#The_default_wallet_layout)
@@ -111,6 +113,38 @@ impl TryFrom<&str> for CustomHDPath {
     }
 }
 
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<&CustomHDPath> for Vec<ChildNumber> {
+    fn from(value: &CustomHDPath) -> Self {
+        let mut result: Vec<ChildNumber> = Vec::with_capacity(value.0.len());
+        for item in value.0.iter() {
+            result.push(ChildNumber::from(item.to_raw()))
+        }
+        return result;
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<CustomHDPath> for Vec<ChildNumber> {
+    fn from(value: CustomHDPath) -> Self {
+        Vec::<ChildNumber>::from(&value)
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<CustomHDPath> for DerivationPath {
+    fn from(value: CustomHDPath) -> Self {
+        DerivationPath::from(Vec::<ChildNumber>::from(&value))
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<&CustomHDPath> for DerivationPath {
+    fn from(value: &CustomHDPath) -> Self {
+        DerivationPath::from(Vec::<ChildNumber>::from(value))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -204,4 +238,26 @@ mod tests {
         let custom = CustomHDPath::try_from("m/2147483692'/0'/0'/0/0");
         assert!(custom.is_err());
     }
+}
+
+#[cfg(all(test, feature = "with-bitcoin"))]
+mod tests_with_bitcoin {
+    use super::*;
+    use std::convert::TryFrom;
+    use bitcoin::util::bip32::ChildNumber;
+
+    #[test]
+    pub fn convert_to_childnumbers() {
+        let hdpath = CustomHDPath::try_from("m/44'/15'/2'/0/35/81/0").unwrap();
+        let childs: Vec<ChildNumber> = hdpath.into();
+        assert_eq!(childs.len(), 7);
+        assert_eq!(childs[0], ChildNumber::from_hardened_idx(44).unwrap());
+        assert_eq!(childs[1], ChildNumber::from_hardened_idx(15).unwrap());
+        assert_eq!(childs[2], ChildNumber::from_hardened_idx(2).unwrap());
+        assert_eq!(childs[3], ChildNumber::from_normal_idx(0).unwrap());
+        assert_eq!(childs[4], ChildNumber::from_normal_idx(35).unwrap());
+        assert_eq!(childs[5], ChildNumber::from_normal_idx(81).unwrap());
+        assert_eq!(childs[6], ChildNumber::from_normal_idx(0).unwrap());
+    }
+
 }
