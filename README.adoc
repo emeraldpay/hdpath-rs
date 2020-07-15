@@ -1,5 +1,12 @@
 = HD Path for Rust
-:lib-version: 0.2.0-alpha
+:lib-version: 0.1.1
+
+image:https://github.com/emeraldpay/hdpath-rs/workflows/Test/badge.svg["Test"]
+image:https://coveralls.io/repos/github/emeraldpay/hdpath-rs/badge.svg["Coveralls"]
+image:https://codecov.io/gh/emeraldpay/hdpath-rs/branch/master/graph/badge.svg[Codecov,link=https://codecov.io/gh/emeraldpay/hdpath-rs]
+image:https://img.shields.io/crates/v/hdpath.svg?style=flat-square["Crates",link="https://crates.io/crates/hdpath"]
+image:https://img.shields.io/badge/License-Apache%202.0-blue.svg["License"]
+
 
 Rust crate that implements common structures and utilities to operate HD Path defined by Bitcoin's BIP-32 standard.
 
