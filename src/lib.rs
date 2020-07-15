@@ -69,6 +69,8 @@
 //! ```
 //!
 extern crate byteorder;
+#[cfg(feature = "with-bitcoin")]
+extern crate bitcoin;
 
 mod errors;
 mod path_custom;

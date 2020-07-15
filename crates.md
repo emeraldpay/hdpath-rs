@@ -68,3 +68,31 @@ fn user_path(index: u32) -> Result<StandardHDPath, ()> {
   }
 }
  ```
+
+## How to use with bitcoin library
+
+Enable `with-bitcoin` feature, that provides extra methods for compatibility with bitcoin lib. 
+It includes conversion into `Vec<ChildNumber>` and `DerivationPath`.
+
+```toml
+hdpath = { version = "0.2.0", features = ["with-bitcoin"] }
+```
+
+Convert to DerivationPath when needed
+
+```rust
+use hdpath::{StandardHDPath};
+use secp256k1::Secp256k1;
+use bitcoin::{
+    network::constants::Network,
+    util::bip32::{ExtendedPrivKey, DerivationPath}
+};
+
+fn get_pk(seed: &[u8], hd_path: &StandardHDPath) -> ExtendedPrivKey {
+  let secp = Secp256k1::new();
+  ExtendedPrivKey::new_master(Network::Bitcoin, seed)
+        // we convert HD Path to bitcoin lib format (DerivationPath)
+        .and_then(|k| k.derive_priv(&secp, &DerivationPath::from(hd_path)))
+        .unwrap()
+}
+```

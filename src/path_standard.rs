@@ -1,6 +1,8 @@
 use crate::{Purpose, PathValue, Error, CustomHDPath};
 use std::convert::{TryFrom, TryInto};
 use byteorder::{WriteBytesExt, BigEndian};
+#[cfg(feature = "with-bitcoin")]
+use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 
 /// Standard HD Path for [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki),
 /// [BIP-49](https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki), [BIP-84](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki)
@@ -214,6 +216,46 @@ impl ToString for StandardHDPath {
                 self.change(),
                 self.index()
         )
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<&StandardHDPath> for Vec<ChildNumber> {
+    fn from(value: &StandardHDPath) -> Self {
+        let result = [
+            ChildNumber::from_hardened_idx(value.purpose().as_value().as_number())
+                .expect("Purpose is not Hardened"),
+            ChildNumber::from_hardened_idx(value.coin_type())
+                .expect("Coin Type is not Hardened"),
+            ChildNumber::from_hardened_idx(value.account())
+                .expect("Account is not Hardened"),
+            ChildNumber::from_normal_idx(value.change())
+                .expect("Change is Hardened"),
+            ChildNumber::from_normal_idx(value.index())
+                .expect("Index is Hardened"),
+        ];
+        return result.to_vec();
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<StandardHDPath> for Vec<ChildNumber> {
+    fn from(value: StandardHDPath) -> Self {
+        Vec::<ChildNumber>::from(&value)
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<StandardHDPath> for DerivationPath {
+    fn from(value: StandardHDPath) -> Self {
+        DerivationPath::from(Vec::<ChildNumber>::from(&value))
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<&StandardHDPath> for DerivationPath {
+    fn from(value: &StandardHDPath) -> Self {
+        DerivationPath::from(Vec::<ChildNumber>::from(value))
     }
 }
 
@@ -602,6 +644,24 @@ mod tests {
             }
         }
     }
+}
 
+#[cfg(all(test, feature = "with-bitcoin"))]
+mod tests_with_bitcoin {
+    use super::*;
+    use std::convert::TryFrom;
+    use bitcoin::util::bip32::ChildNumber;
+
+    #[test]
+    pub fn convert_to_childnumbers() {
+        let hdpath = StandardHDPath::try_from("m/44'/60'/2'/0/3581").unwrap();
+        let childs: Vec<ChildNumber> = hdpath.into();
+        assert_eq!(childs.len(), 5);
+        assert_eq!(childs[0], ChildNumber::from_hardened_idx(44).unwrap());
+        assert_eq!(childs[1], ChildNumber::from_hardened_idx(60).unwrap());
+        assert_eq!(childs[2], ChildNumber::from_hardened_idx(2).unwrap());
+        assert_eq!(childs[3], ChildNumber::from_normal_idx(0).unwrap());
+        assert_eq!(childs[4], ChildNumber::from_normal_idx(3581).unwrap());
+    }
 
 }

@@ -1,4 +1,5 @@
 = HD Path for Rust
+:lib-version: 0.2.0-alpha
 
 Rust crate that implements common structures and utilities to operate HD Path defined by Bitcoin's BIP-32 standard.
 
@@ -22,9 +23,10 @@ All supported standards:
 == Use
 
 .Cargo.toml:
+[source,toml,subs="attributes"]
 ----
 [dependencies]
-hdpath = "0.1"
+hdpath = "{lib-version}"
 ----
 
 === Examples
@@ -82,9 +84,39 @@ fn user_path(index: u32) -> Result<StandardHDPath, ()> {
 }
 ----
 
+=== Use with bitcoin library
+
+Enable `with-bitcoin` feature, that provides extra methods for compatibility with bitcoin lib.
+It includes conversion into `Vec<ChildNumber>` and `DerivationPath`.
+
+[source,toml,subs="attributes"]
+----
+hdpath = { version = "{lib-version}", features = ["with-bitcoin"] }
+----
+
+.Convert to DerivationPath
+[source,rust]
+----
+use hdpath::{StandardHDPath};
+use secp256k1::Secp256k1;
+use bitcoin::{
+    network::constants::Network,
+    util::bip32::{ExtendedPrivKey, DerivationPath}
+};
+
+fn get_pk(seed: &[u8], hd_path: &StandardHDPath) -> ExtendedPrivKey {
+  let secp = Secp256k1::new();
+  ExtendedPrivKey::new_master(Network::Bitcoin, seed)
+        // we convert HD Path to bitcoin lib format (DerivationPath)
+        .and_then(|k| k.derive_priv(&secp, &DerivationPath::from(hd_path)))
+        .unwrap()
+}
+
+----
+
 == License
 
-Copyright 2020 ETCDEV GmbH
+Copyright 2020 EmeraldPay, Inc
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
