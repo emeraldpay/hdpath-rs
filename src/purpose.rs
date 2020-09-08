@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
 use crate::{PathValue, Error};
 use std::convert::TryFrom;
+#[cfg(feature = "with-bitcoin")]
+use bitcoin::util::bip32::{ChildNumber};
 
 /// The purpose number, a first number in HD Path, which is supposed to be reference actual format. Supposed to be a hardened value
 /// See [BIP-43](https://github.com/bitcoin/bips/blob/master/bip-0043.mediawiki)
@@ -73,6 +75,30 @@ impl TryFrom<u32> for Purpose {
     }
 }
 
+impl From<Purpose> for u32 {
+    fn from(value: Purpose) -> Self {
+        match value {
+            Purpose::None => 0,
+            Purpose::Pubkey => 44,
+            Purpose::ScriptHash => 49,
+            Purpose::Witness => 84,
+            Purpose::Custom(n) => n.clone()
+        }
+    }
+}
+
+impl From<&Purpose> for u32 {
+    fn from(value: &Purpose) -> Self {
+        match value {
+            Purpose::None => 0,
+            Purpose::Pubkey => 44,
+            Purpose::ScriptHash => 49,
+            Purpose::Witness => 84,
+            Purpose::Custom(n) => n.clone()
+        }
+    }
+}
+
 impl TryFrom<usize> for Purpose {
     type Error = Error;
 
@@ -97,6 +123,20 @@ impl TryFrom<PathValue> for Purpose {
 
     fn try_from(value: PathValue) -> Result<Self, Self::Error> {
         Purpose::try_from(value.as_number())
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl From<Purpose> for ChildNumber {
+    fn from(value: Purpose) -> Self {
+        ChildNumber::from_hardened_idx(value.into()).unwrap()
+    }
+}
+
+#[cfg(feature = "with-bitcoin")]
+impl From<&Purpose> for ChildNumber {
+    fn from(value: &Purpose) -> Self {
+        ChildNumber::from_hardened_idx(value.into()).unwrap()
     }
 }
 

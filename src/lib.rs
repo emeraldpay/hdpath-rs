@@ -48,6 +48,22 @@
 //! println!("{:?}", hdpath);
 //! ```
 //!
+//! ## Create account and derive addresses
+//! ```
+//! use hdpath::{AccountHDPath, StandardHDPath, Purpose};
+//! use std::convert::TryFrom;
+//!
+//! let hd_account = AccountHDPath::new(Purpose::Witness, 0, 1);
+//! // prints "m/44'/0'/1'/x/x"
+//! println!("{:?}", hd_account);
+//!
+//! // get actual address on the account path. Returns StandardHDPath
+//! let hd_path = hd_account.address_at(0, 7);
+//!
+//! //prints: "m/44'/0'/1'/0/7"
+//! println!("{:?}", hd_path);
+//! ```
+//!
 //! ## Verify before create
 //!
 //! Please note that values for HD Path are limited to `2^31-1` because the highest bit is reserved
@@ -73,6 +89,7 @@ extern crate byteorder;
 extern crate bitcoin;
 
 mod errors;
+mod path_account;
 mod path_custom;
 mod path_short;
 mod path_standard;
@@ -80,6 +97,7 @@ mod path_value;
 mod purpose;
 
 pub use errors::Error;
+pub use path_account::AccountHDPath;
 pub use path_custom::CustomHDPath;
 pub use path_standard::StandardHDPath;
 pub use path_value::{PathValue};

@@ -24,29 +24,45 @@ All supported standards:
 use hdpath::StandardHDPath;
 use std::convert::TryFrom;
 
-let hdpath = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
-//prints "m/44'/0'/0'/0/0"
-println!("{:?}", hdpath);
+let hd_path = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
+// prints "m/44'/0'/0'/0/0"
+println!("{:?}", hd_path);
 
-//prints "0", which is account id
-println!("{:?}", hdpath.account());
+// prints "0", which is account id
+println!("{:?}", hd_path.account());
 
-//prints: "purpose: Pubkey, coin: 0, account: 0, change: 0, index: 0"
+// prints: "purpose: Pubkey, coin: 0, account: 0, change: 0, index: 0"
 println!("purpose: {:?}, coin: {}, account: {}, change: {}, index: {}",
-    hdpath.purpose(),
-    hdpath.coin_type(),
-    hdpath.account(),
-    hdpath.change(),
-    hdpath.index())
+    hd_path.purpose(),
+    hd_path.coin_type(),
+    hd_path.account(),
+    hd_path.change(),
+    hd_path.index())
 ```
 
 ## Create from values
 ```
 use hdpath::{StandardHDPath, Purpose};
 
-let hdpath = StandardHDPath::new(Purpose::Witness, 0, 1, 0, 101);
-//prints "m/84'/0'/1'/0/101"
-println!("{:?}", hdpath);
+let hd_path = StandardHDPath::new(Purpose::Witness, 0, 1, 0, 101);
+// prints "m/84'/0'/1'/0/101"
+println!("{:?}", hd_path);
+```
+
+## Create account and derive addresses
+```
+use hdpath::{AccountHDPath, StandardHDPath, Purpose};
+use std::convert::TryFrom;
+
+let hd_account = AccountHDPath::new(Purpose::Witness, 0, 1);
+// prints "m/44'/0'/1'/x/x"
+println!("{:?}", hd_account);
+
+// get actual address on the account path. Returns StandardHDPath
+let hd_path = hd_account.address_at(0, 7);
+
+//prints: "m/44'/0'/1'/0/7"
+println!("{:?}", hd_path);
 ```
 
 ## Verify before create

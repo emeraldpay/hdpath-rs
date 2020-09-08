@@ -44,20 +44,20 @@ hdpath = "{lib-version}"
 use hdpath::StandardHDPath;
 use std::convert::TryFrom;
 
-let hdpath = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
+let hd_path = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
 //prints "m/44'/0'/0'/0/0"
-println!("{:?}", hdpath);
+println!("{:?}", hd_path);
 
 //prints "0", which is account id
-println!("{:?}", hdpath.account());
+println!("{:?}", hd_path.account());
 
 //prints: "purpose: Pubkey, coin: 0, account: 0, change: 0, index: 0"
 println!("purpose: {:?}, coin: {}, account: {}, change: {}, index: {}",
-    hdpath.purpose(),
-    hdpath.coin_type(),
-    hdpath.account(),
-    hdpath.change(),
-    hdpath.index()
+    hd_path.purpose(),
+    hd_path.coin_type(),
+    hd_path.account(),
+    hd_path.change(),
+    hd_path.index()
 );
 ----
 
@@ -66,15 +66,31 @@ println!("purpose: {:?}, coin: {}, account: {}, change: {}, index: {}",
 ----
 use hdpath::{StandardHDPath, Purpose};
 
-let hdpath = StandardHDPath::new(Purpose::Witness, 0, 1, 0, 101);
+let hd_path = StandardHDPath::new(Purpose::Witness, 0, 1, 0, 101);
 //prints "m/84'/0'/1'/0/101"
-println!("{:?}", hdpath);
+println!("{:?}", hd_path);
 ----
 
-Please note that values for HD Path are limited to `2^31-1` because the highest bit is reserved
-for marking a _hardened_ value. Therefore, if you're getting individual values from some user
-input, you should verify the value before passing to `::new`. Otherwise the constructor may
-fail with _panic_ if an invalid value was passed.
+.Create account and derive addresses
+[source, rust]
+----
+use hdpath::{AccountHDPath, StandardHDPath, Purpose};
+use std::convert::TryFrom;
+
+let hd_account = AccountHDPath::new(Purpose::Witness, 0, 1);
+// prints "m/44'/0'/1'/x/x"
+println!("{:?}", hd_account);
+
+// get actual address on the account path. Returns StandardHDPath
+let hd_path = hd_account.address_at(0, 7);
+
+//prints: "m/44'/0'/1'/0/7"
+println!("{:?}", hd_path);
+----
+
+Please note that values for HD Path are limited to `2^31-1` because the highest bit is reserved for marking a _hardened_ value.
+Therefore, if you're getting individual values from some user input, you should verify the value before passing to `::new`.
+Otherwise, the constructor may fail with _panic_ if an invalid value is passed.
 
 .Verify before create
 [source, rust]

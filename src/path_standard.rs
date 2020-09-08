@@ -21,7 +21,7 @@ use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 /// # use std::convert::TryFrom;
 ///
 /// //creates path m/84'/0'/0'/0/0
-/// let hdpath = StandardHDPath::try_from("m/84'/0'/0'/0/0");
+/// let hdpath = StandardHDPath::try_from("m/84'/0'/0'/0/0").unwrap();
 /// ```
 ///
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -41,14 +41,14 @@ impl StandardHDPath {
     ///let hdpath =  StandardHDPath::new(Purpose::Witness, 0, 2, 0, 0);
     ///```
     pub fn new(purpose: Purpose, coin_type: u32, account: u32, change: u32, index: u32) -> StandardHDPath {
-        match StandardHDPath::try_new(purpose, coin_type, account, change, index) {
+        match Self::try_new(purpose, coin_type, account, change, index) {
             Ok(path) => path,
             Err(err) => panic!("Invalid {}: {}", err.0, err.1)
         }
     }
 
     ///Try to create a standard HD Path.
-    ///Return error `(field_name, invalid_value)` if ant field is incorrect.
+    ///Return error `(field_name, invalid_value)` if a field has an incorrect value.
     ///```
     ///use hdpath::{StandardHDPath, Purpose};
     ///
@@ -655,13 +655,13 @@ mod tests_with_bitcoin {
     #[test]
     pub fn convert_to_childnumbers() {
         let hdpath = StandardHDPath::try_from("m/44'/60'/2'/0/3581").unwrap();
-        let childs: Vec<ChildNumber> = hdpath.into();
-        assert_eq!(childs.len(), 5);
-        assert_eq!(childs[0], ChildNumber::from_hardened_idx(44).unwrap());
-        assert_eq!(childs[1], ChildNumber::from_hardened_idx(60).unwrap());
-        assert_eq!(childs[2], ChildNumber::from_hardened_idx(2).unwrap());
-        assert_eq!(childs[3], ChildNumber::from_normal_idx(0).unwrap());
-        assert_eq!(childs[4], ChildNumber::from_normal_idx(3581).unwrap());
+        let children: Vec<ChildNumber> = hdpath.into();
+        assert_eq!(children.len(), 5);
+        assert_eq!(children[0], ChildNumber::from_hardened_idx(44).unwrap());
+        assert_eq!(children[1], ChildNumber::from_hardened_idx(60).unwrap());
+        assert_eq!(children[2], ChildNumber::from_hardened_idx(2).unwrap());
+        assert_eq!(children[3], ChildNumber::from_normal_idx(0).unwrap());
+        assert_eq!(children[4], ChildNumber::from_normal_idx(3581).unwrap());
     }
 
 }

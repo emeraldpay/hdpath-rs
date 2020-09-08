@@ -11,19 +11,35 @@ impl PathValue {
         value < FIRST_BIT
     }
 
-    pub fn normal(value: u32) -> PathValue {
+    pub fn try_normal(value: u32) -> Result<PathValue, ()> {
         if !PathValue::is_ok(value) {
-            panic!("Raw hardened value passed")
+            Err(())
         } else {
-            PathValue::Normal(value)
+            Ok(PathValue::Normal(value))
+        }
+    }
+
+    pub fn normal(value: u32) -> PathValue {
+        if let Ok(result) = PathValue::try_normal(value) {
+            result
+        } else {
+            panic!("Raw hardened value passed")
+        }
+    }
+
+    pub fn try_hardened(value: u32) -> Result<PathValue, ()> {
+        if !PathValue::is_ok(value) {
+            Err(())
+        } else {
+            Ok(PathValue::Hardened(value))
         }
     }
 
     pub fn hardened(value: u32) -> PathValue {
-        if !PathValue::is_ok(value) {
-            panic!("Raw hardened value passed")
+        if let Ok(result) = PathValue::try_hardened(value) {
+            result
         } else {
-            PathValue::Hardened(value)
+            panic!("Raw hardened value passed")
         }
     }
 
