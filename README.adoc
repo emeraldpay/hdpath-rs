@@ -42,9 +42,9 @@ hdpath = "{lib-version}"
 [source, rust]
 ----
 use hdpath::StandardHDPath;
-use std::convert::TryFrom;
+use std::str::FromStr;
 
-let hd_path = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
+let hd_path = StandardHDPath::from_str("m/44'/0'/0'/0/0").unwrap();
 //prints "m/44'/0'/0'/0/0"
 println!("{:?}", hd_path);
 

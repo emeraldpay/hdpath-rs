@@ -21,9 +21,9 @@
 //! ## Basic usage
 //! ```
 //! use hdpath::StandardHDPath;
-//! # use std::convert::TryFrom;
+//! # use std::str::FromStr;
 //!
-//! let hdpath = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
+//! let hdpath = StandardHDPath::from_str("m/44'/0'/0'/0/0").unwrap();
 //! //prints "m/44'/0'/0'/0/0"
 //! println!("{:?}", hdpath);
 //!
@@ -51,7 +51,6 @@
 //! ## Create account and derive addresses
 //! ```
 //! use hdpath::{AccountHDPath, StandardHDPath, Purpose};
-//! use std::convert::TryFrom;
 //!
 //! let hd_account = AccountHDPath::new(Purpose::Witness, 0, 1);
 //! // prints "m/44'/0'/1'/x/x"

@@ -3,6 +3,7 @@ use std::convert::{TryFrom, TryInto};
 use byteorder::{WriteBytesExt, BigEndian};
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
+use std::str::FromStr;
 
 /// Standard HD Path for [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki),
 /// [BIP-49](https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki), [BIP-84](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki)
@@ -18,10 +19,10 @@ use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 /// # Parse string
 /// ```
 /// use hdpath::{StandardHDPath, Purpose};
-/// # use std::convert::TryFrom;
+/// # use std::str::FromStr;
 ///
 /// //creates path m/84'/0'/0'/0/0
-/// let hdpath = StandardHDPath::try_from("m/84'/0'/0'/0/0").unwrap();
+/// let hdpath = StandardHDPath::from_str("m/84'/0'/0'/0/0").unwrap();
 /// ```
 ///
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -202,7 +203,15 @@ impl TryFrom<&str> for StandardHDPath
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let value = CustomHDPath::try_from(value)?;
+        StandardHDPath::from_str(value)
+    }
+}
+
+impl FromStr for StandardHDPath {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let value = CustomHDPath::from_str(s)?;
         StandardHDPath::try_from(value)
     }
 }
@@ -288,6 +297,18 @@ mod tests {
             StandardHDPath::new(Purpose::Pubkey, 60, 1, 0, 0),
             act
         );
+    }
+
+    #[test]
+    pub fn create_from_str() {
+        let standard = StandardHDPath::from_str("m/49'/0'/1'/0/5").unwrap();
+        let act = CustomHDPath::from(standard);
+        assert_eq!(5, act.0.len());
+        assert_eq!(&PathValue::Hardened(49), act.0.get(0).unwrap());
+        assert_eq!(&PathValue::Hardened(0), act.0.get(1).unwrap());
+        assert_eq!(&PathValue::Hardened(1), act.0.get(2).unwrap());
+        assert_eq!(&PathValue::Normal(0), act.0.get(3).unwrap());
+        assert_eq!(&PathValue::Normal(5), act.0.get(4).unwrap());
     }
 
     #[test]

@@ -2,6 +2,7 @@ use crate::{Purpose, CustomHDPath, Error, PathValue, StandardHDPath};
 use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
+use std::str::FromStr;
 
 
 /// Account-only HD Path for [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki),
@@ -22,18 +23,18 @@ use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 /// # Parse string
 /// ```
 /// use hdpath::{AccountHDPath, Purpose};
-/// # use std::convert::TryFrom;
+/// # use std::str::FromStr;
 ///
 /// //creates path m/84'/0'/0'/0/0
-/// let hd_account = AccountHDPath::try_from("m/84'/0'/0'").unwrap();
+/// let hd_account = AccountHDPath::from_str("m/84'/0'/0'").unwrap();
 /// ```
 ///
 /// # Create actial path
 /// ```
 /// use hdpath::{AccountHDPath, Purpose, StandardHDPath};
-/// # use std::convert::TryFrom;
+/// # use std::str::FromStr;
 ///
-/// let hd_account = AccountHDPath::try_from("m/84'/0'/0'").unwrap();
+/// let hd_account = AccountHDPath::from_str("m/84'/0'/0'").unwrap();
 /// // gives hd path m/84'/0'/0'/0/4
 /// let hd_path: StandardHDPath = hd_account.address_at(0, 4).unwrap();
 /// ```
@@ -137,7 +138,15 @@ impl TryFrom<&str> for AccountHDPath
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let value = CustomHDPath::try_from(value)?;
+        AccountHDPath::from_str(value)
+    }
+}
+
+impl FromStr for AccountHDPath {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let value = CustomHDPath::from_str(s)?;
         AccountHDPath::try_from(value)
     }
 }
@@ -194,8 +203,18 @@ mod tests {
     use std::convert::TryFrom;
 
     #[test]
-    fn create_from_string() {
+    fn create_try_from_string() {
         let hd_account = AccountHDPath::try_from("m/84'/0'/5'");
+        assert!(hd_account.is_ok());
+        let hd_account = hd_account.unwrap();
+        assert_eq!(Purpose::Witness, hd_account.purpose);
+        assert_eq!(0, hd_account.coin_type);
+        assert_eq!(5, hd_account.account);
+    }
+
+    #[test]
+    fn create_from_string() {
+        let hd_account = AccountHDPath::from_str("m/84'/0'/5'");
         assert!(hd_account.is_ok());
         let hd_account = hd_account.unwrap();
         assert_eq!(Purpose::Witness, hd_account.purpose);

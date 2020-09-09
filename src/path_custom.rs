@@ -2,6 +2,7 @@ use crate::{PathValue, Error};
 use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
+use std::str::FromStr;
 
 /// A custom HD Path, that can be any length and contain any Hardened and non-Hardened values in
 /// any order. Direct implementation for [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#The_default_wallet_layout)
@@ -39,6 +40,14 @@ impl TryFrom<&str> for CustomHDPath {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
+        CustomHDPath::from_str(value)
+    }
+}
+
+impl FromStr for CustomHDPath {
+    type Err = Error;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         const STATE_EXPECT_NUM: usize = 0;
         const STATE_READING_NUM: usize = 1;
         const STATE_READ_MARKER: usize = 2;

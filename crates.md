@@ -20,11 +20,11 @@ All supported standards:
 # Examples
 
 ## Basic usage
-```
+```rust
 use hdpath::StandardHDPath;
-use std::convert::TryFrom;
+use std::str::FromStr;
 
-let hd_path = StandardHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
+let hd_path = StandardHDPath::from_str("m/44'/0'/0'/0/0").unwrap();
 // prints "m/44'/0'/0'/0/0"
 println!("{:?}", hd_path);
 
@@ -41,7 +41,7 @@ println!("purpose: {:?}, coin: {}, account: {}, change: {}, index: {}",
 ```
 
 ## Create from values
-```
+```rust
 use hdpath::{StandardHDPath, Purpose};
 
 let hd_path = StandardHDPath::new(Purpose::Witness, 0, 1, 0, 101);
@@ -50,9 +50,8 @@ println!("{:?}", hd_path);
 ```
 
 ## Create account and derive addresses
-```
+```rust
 use hdpath::{AccountHDPath, StandardHDPath, Purpose};
-use std::convert::TryFrom;
 
 let hd_account = AccountHDPath::new(Purpose::Witness, 0, 1);
 // prints "m/44'/0'/1'/x/x"
@@ -72,7 +71,7 @@ for marking a _hardened_ value. Therefore, if you're getting individual values f
 input, you should verify the value before passing to `::new`. Otherwise the constructor may
 fail with _panic_ if an invalid value was passed.
 
-```
+```rust
 use hdpath::{StandardHDPath, PathValue, Purpose};
 
 fn user_path(index: u32) -> Result<StandardHDPath, ()> {

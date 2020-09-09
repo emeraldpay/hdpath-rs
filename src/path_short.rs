@@ -2,6 +2,7 @@ use crate::{Purpose, CustomHDPath, Error, PathValue};
 use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ShortHDPath {
@@ -44,7 +45,15 @@ impl TryFrom<&str> for ShortHDPath
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let value = CustomHDPath::try_from(value)?;
+        ShortHDPath::from_str(value)
+    }
+}
+
+impl FromStr for ShortHDPath {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let value = CustomHDPath::from_str(s)?;
         ShortHDPath::try_from(value)
     }
 }
