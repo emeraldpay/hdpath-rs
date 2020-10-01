@@ -105,7 +105,26 @@ impl AccountHDPath {
     pub fn account(&self) -> u32 {
         self.account
     }
+}
 
+impl From<&StandardHDPath> for AccountHDPath {
+    fn from(value: &StandardHDPath) -> Self {
+        AccountHDPath::new(
+            value.purpose().clone(),
+            value.coin_type(),
+            value.account(),
+        )
+    }
+}
+
+impl From<StandardHDPath> for AccountHDPath {
+    fn from(value: StandardHDPath) -> Self {
+        AccountHDPath::new(
+            value.purpose().clone(),
+            value.coin_type(),
+            value.account(),
+        )
+    }
 }
 
 impl TryFrom<CustomHDPath> for AccountHDPath {
@@ -286,6 +305,21 @@ mod tests {
             StandardHDPath::try_from("m/84'/0'/0'/0/15").unwrap(),
             hd_path
         );
+    }
+
+    #[test]
+    fn convert_from_full() {
+        let hd_path = StandardHDPath::from_str("m/84'/0'/0'/0/15").unwrap();
+        let hd_account = AccountHDPath::from(&hd_path);
+        assert_eq!(AccountHDPath::from_str("m/84'/0'/0'").unwrap(), hd_account);
+
+        let hd_path = StandardHDPath::from_str("m/84'/0'/3'/0/0").unwrap();
+        let hd_account = AccountHDPath::from(&hd_path);
+        assert_eq!(AccountHDPath::from_str("m/84'/0'/3'").unwrap(), hd_account);
+
+        let hd_path = StandardHDPath::from_str("m/44'/1'/1'/0/0").unwrap();
+        let hd_account = AccountHDPath::from(&hd_path);
+        assert_eq!(AccountHDPath::from_str("m/44'/1'/1'").unwrap(), hd_account);
     }
 }
 
