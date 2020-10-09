@@ -1,5 +1,5 @@
 = HD Path for Rust
-:lib-version: 0.3.0
+:lib-version: 0.3.1
 
 image:https://github.com/emeraldpay/hdpath-rs/workflows/Test/badge.svg["Test"]
 image:https://coveralls.io/repos/github/emeraldpay/hdpath-rs/badge.svg["Coveralls"]

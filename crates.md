@@ -90,7 +90,7 @@ Enable `with-bitcoin` feature, that provides extra methods for compatibility wit
 It includes conversion into `Vec<ChildNumber>` and `DerivationPath`.
 
 ```toml
-hdpath = { version = "0.2.0", features = ["with-bitcoin"] }
+hdpath = { version = "0.3.1", features = ["with-bitcoin"] }
 ```
 
 Convert to DerivationPath when needed
