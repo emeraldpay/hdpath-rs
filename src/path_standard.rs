@@ -1,9 +1,9 @@
 use crate::{Purpose, PathValue, Error, CustomHDPath};
 use std::convert::{TryFrom, TryInto};
-use byteorder::{WriteBytesExt, BigEndian};
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
+use crate::traits::HDPath;
 
 /// Standard HD Path for [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki),
 /// [BIP-49](https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki), [BIP-84](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki)
@@ -107,19 +107,6 @@ impl StandardHDPath {
         self.index
     }
 
-    /// Encode as bytes, where first byte is number of elements in path (always 5 for StandardHDPath)
-    /// following by 4-byte BE values
-    pub fn to_bytes(&self) -> Vec<u8> {
-        let mut buf = Vec::with_capacity(1 + 4 * 5);
-        buf.push(5u8);
-        buf.write_u32::<BigEndian>(self.purpose.as_value().to_raw()).unwrap();
-        buf.write_u32::<BigEndian>(PathValue::Hardened(self.coin_type).to_raw()).unwrap();
-        buf.write_u32::<BigEndian>(PathValue::Hardened(self.account).to_raw()).unwrap();
-        buf.write_u32::<BigEndian>(PathValue::Normal(self.change).to_raw()).unwrap();
-        buf.write_u32::<BigEndian>(PathValue::Normal(self.index).to_raw()).unwrap();
-        buf
-    }
-
     /// Decode from bytes, where first byte is number of elements in path (always 5 for StandardHDPath)
     /// following by 4-byte BE values
     pub fn from_bytes(path: &[u8]) -> Result<Self, Error> {
@@ -138,6 +125,23 @@ impl StandardHDPath {
             PathValue::from_raw(u32::from_be_bytes(path[17..21].try_into().unwrap())).as_number(),
         );
         hdpath.map_err(|_| Error::InvalidFormat)
+    }
+}
+
+impl HDPath for StandardHDPath {
+    fn len(&self) -> u8 {
+        5
+    }
+
+    fn get(&self, pos: u8) -> Option<PathValue> {
+        match pos {
+            0 => Some(self.purpose.as_value()),
+            1 => Some(PathValue::Hardened(self.coin_type)),
+            2 => Some(PathValue::Hardened(self.account)),
+            3 => Some(PathValue::Normal(self.change)),
+            4 => Some(PathValue::Normal(self.index)),
+            _ => None
+        }
     }
 }
 
@@ -277,10 +281,10 @@ mod tests {
     #[test]
     pub fn from_custom() {
         let act = StandardHDPath::try_from(
-            CustomHDPath::new(vec![
+            CustomHDPath::try_new(vec![
                 PathValue::Hardened(49), PathValue::Hardened(0), PathValue::Hardened(1),
                 PathValue::Normal(0), PathValue::Normal(5)
-            ])
+            ]).unwrap()
         ).unwrap();
         assert_eq!(
             StandardHDPath::new(Purpose::ScriptHash, 0, 1, 0, 5),
@@ -288,10 +292,10 @@ mod tests {
         );
 
         let act = StandardHDPath::try_from(
-            CustomHDPath::new(vec![
+            CustomHDPath::try_new(vec![
                 PathValue::Hardened(44), PathValue::Hardened(60), PathValue::Hardened(1),
                 PathValue::Normal(0), PathValue::Normal(0)
-            ])
+            ]).unwrap()
         ).unwrap();
         assert_eq!(
             StandardHDPath::new(Purpose::Pubkey, 60, 1, 0, 0),

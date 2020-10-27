@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
+use crate::traits::HDPath;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ShortHDPath {
@@ -10,6 +11,22 @@ pub struct ShortHDPath {
     pub coin_type: u32,
     pub account: u32,
     pub index: u32
+}
+
+impl HDPath for ShortHDPath {
+    fn len(&self) -> u8 {
+        4
+    }
+
+    fn get(&self, pos: u8) -> Option<PathValue> {
+        match pos {
+            0 => Some(self.purpose.as_value()),
+            1 => Some(PathValue::Hardened(self.coin_type)),
+            2 => Some(PathValue::Hardened(self.account)),
+            3 => Some(PathValue::Normal(self.index)),
+            _ => None
+        }
+    }
 }
 
 impl TryFrom<CustomHDPath> for ShortHDPath {

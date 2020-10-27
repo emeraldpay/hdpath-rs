@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
+use crate::traits::HDPath;
 
 
 /// Account-only HD Path for [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki),
@@ -104,6 +105,21 @@ impl AccountHDPath {
 
     pub fn account(&self) -> u32 {
         self.account
+    }
+}
+
+impl HDPath for AccountHDPath {
+    fn len(&self) -> u8 {
+        3
+    }
+
+    fn get(&self, pos: u8) -> Option<PathValue> {
+        match pos {
+            0 => Some(self.purpose.as_value()),
+            1 => Some(PathValue::Hardened(self.coin_type)),
+            2 => Some(PathValue::Hardened(self.account)),
+            _ => None
+        }
     }
 }
 

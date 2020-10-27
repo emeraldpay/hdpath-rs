@@ -3,9 +3,13 @@ use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
+use crate::traits::HDPath;
 
 /// A custom HD Path, that can be any length and contain any Hardened and non-Hardened values in
 /// any order. Direct implementation for [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#The_default_wallet_layout)
+///
+/// If you need just standard type of HD Path like `m/44'/0'/0'/0/0` use [`StandardHDPath`](struct.StandardHDPath.html) instead.
+///
 /// # Usage
 ///
 /// ## Parse string
@@ -22,17 +26,36 @@ use std::str::FromStr;
 /// ```
 /// use hdpath::{CustomHDPath, PathValue};
 ///
-/// let hdpath = CustomHDPath::new(vec![
+/// let hdpath = CustomHDPath::try_new(vec![
 ///    PathValue::hardened(44), PathValue::hardened(0), PathValue::hardened(1),
 ///    PathValue::normal(0), PathValue::normal(0)
-/// ]);
+/// ]).unwrap();
 /// ```
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct CustomHDPath(pub Vec<PathValue>);
 
 impl CustomHDPath {
-    pub fn new(values: Vec<PathValue>) -> CustomHDPath {
-        CustomHDPath(values)
+
+    /// Create a new HD Path.
+    ///
+    /// Returns error only if provided vector is too large, i.e. more than 255 elements (since BIP-32
+    /// says about ability to encode depth in a single byte).
+    pub fn try_new(values: Vec<PathValue>) -> Result<CustomHDPath, Error> {
+        if values.len() > 0xff {
+            Err(Error::InvalidLength(values.len()))
+        } else {
+            Ok(CustomHDPath(values))
+        }
+    }
+}
+
+impl HDPath for CustomHDPath {
+    fn len(&self) -> u8 {
+        self.0.len() as u8
+    }
+
+    fn get(&self, pos: u8) -> Option<PathValue> {
+        self.0.get(pos as usize).map(|a| a.clone())
     }
 }
 
@@ -161,6 +184,7 @@ mod tests {
     #[test]
     pub fn try_from_common() {
         let act = CustomHDPath::try_from("m/44'/0'/0'/0/0").unwrap();
+        act.0[0].as_number();
         assert_eq!(5, act.0.len());
         assert_eq!(&PathValue::Hardened(44), act.0.get(0).unwrap());
         assert_eq!(&PathValue::Hardened(0), act.0.get(1).unwrap());
@@ -240,12 +264,21 @@ mod tests {
         }
     }
 
-
-
     #[test]
     pub fn fail_incorrect_hardened() {
         let custom = CustomHDPath::try_from("m/2147483692'/0'/0'/0/0");
         assert!(custom.is_err());
+    }
+
+    #[test]
+    pub fn cannot_create_too_long() {
+        let mut path = Vec::with_capacity(0xff + 1);
+        for _i in 0..path.capacity() {
+            path.push(PathValue::Normal(1));
+        }
+        let custom = CustomHDPath::try_new(path);
+        assert!(custom.is_err());
+        assert_eq!(Error::InvalidLength(256), custom.expect_err("not error"));
     }
 }
 

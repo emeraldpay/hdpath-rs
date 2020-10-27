@@ -16,6 +16,8 @@
 //! - [BIP-49](https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki)
 //! - [BIP-84](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki)
 //!
+//! Base traits is [HDPath](trait.HDPath.html), with few specific implementations and general [`CustomHDPath`](struct.CustomHDPath.html)
+//!
 //! # Examples
 //!
 //! ## Basic usage
@@ -88,6 +90,7 @@ extern crate byteorder;
 extern crate bitcoin;
 
 mod errors;
+mod traits;
 mod path_account;
 mod path_custom;
 mod path_short;
@@ -96,6 +99,7 @@ mod path_value;
 mod purpose;
 
 pub use errors::Error;
+pub use traits::HDPath;
 pub use path_account::AccountHDPath;
 pub use path_custom::CustomHDPath;
 pub use path_standard::StandardHDPath;
