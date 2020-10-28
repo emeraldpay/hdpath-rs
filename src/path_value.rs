@@ -1,9 +1,12 @@
+#[cfg(feature = "with-bitcoin")]
+use bitcoin::util::bip32::ChildNumber;
+
 pub const FIRST_BIT: u32 = 0x80000000;
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum PathValue {
     Normal(u32),
-    Hardened(u32)
+    Hardened(u32),
 }
 
 impl PathValue {
@@ -66,9 +69,44 @@ impl PathValue {
     }
 }
 
+#[cfg(feature = "with-bitcoin")]
+impl From<PathValue> for ChildNumber {
+    fn from(value: PathValue) -> Self {
+        match value {
+            PathValue::Hardened(i) => ChildNumber::from_hardened_idx(i).unwrap(),
+            PathValue::Normal(i) => ChildNumber::from_normal_idx(i).unwrap(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "with-bitcoin")]
+    use bitcoin::util::bip32::ChildNumber;
+
+    #[test]
+    #[cfg(feature = "with-bitcoin")]
+    fn convert_to_bitcoin() {
+        let act: ChildNumber = PathValue::Normal(0).into();
+        assert_eq!(ChildNumber::from_normal_idx(0).unwrap(), act);
+
+        let act: ChildNumber = PathValue::Normal(1).into();
+        assert_eq!(ChildNumber::from_normal_idx(1).unwrap(), act);
+
+        let act: ChildNumber = PathValue::Normal(100).into();
+        assert_eq!(ChildNumber::from_normal_idx(100).unwrap(), act);
+
+        let act: ChildNumber = PathValue::Hardened(0).into();
+        assert_eq!(ChildNumber::from_hardened_idx(0).unwrap(), act);
+
+        let act: ChildNumber = PathValue::Hardened(1).into();
+        assert_eq!(ChildNumber::from_hardened_idx(1).unwrap(), act);
+
+        let act: ChildNumber = PathValue::Hardened(11).into();
+        assert_eq!(ChildNumber::from_hardened_idx(11).unwrap(), act);
+    }
+
 
     #[test]
     fn ok_for_small_values() {
