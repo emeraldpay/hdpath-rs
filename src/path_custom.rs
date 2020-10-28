@@ -67,6 +67,18 @@ impl TryFrom<&str> for CustomHDPath {
     }
 }
 
+impl ToString for CustomHDPath {
+    fn to_string(&self) -> String {
+        let mut buf = String::new();
+        buf.push_str("m");
+        for pv in self.0.iter() {
+            buf.push('/');
+            buf.push_str(pv.to_string().as_str())
+        }
+        buf
+    }
+}
+
 impl FromStr for CustomHDPath {
     type Err = Error;
 
@@ -180,6 +192,29 @@ impl std::convert::From<&CustomHDPath> for DerivationPath {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    pub fn to_string() {
+        assert_eq!(
+            CustomHDPath::try_from("m/44'/0'/0'/0/0").unwrap().to_string(),
+            "m/44'/0'/0'/0/0".to_string()
+        );
+
+        assert_eq!(
+            CustomHDPath::try_from("m/84'/1'/2'/3/4").unwrap().to_string(),
+            "m/84'/1'/2'/3/4".to_string()
+        );
+
+        assert_eq!(
+            CustomHDPath::try_from("m/1'").unwrap().to_string(),
+            "m/1'".to_string()
+        );
+
+        assert_eq!(
+            CustomHDPath::try_from("m/44'/0'/1'/2/3/4'/5/67'/8'/910").unwrap().to_string(),
+            "m/44'/0'/1'/2/3/4'/5/67'/8'/910".to_string()
+        );
+    }
 
     #[test]
     pub fn try_from_common() {

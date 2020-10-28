@@ -79,6 +79,15 @@ impl From<PathValue> for ChildNumber {
     }
 }
 
+impl ToString for PathValue {
+    fn to_string(&self) -> String {
+        match self {
+            PathValue::Normal(n) => n.to_string(),
+            PathValue::Hardened(n) => format!("{}'", n)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -107,6 +116,17 @@ mod tests {
         assert_eq!(ChildNumber::from_hardened_idx(11).unwrap(), act);
     }
 
+    #[test]
+    fn to_string_normal() {
+        assert_eq!(PathValue::Normal(0).to_string(), "0");
+        assert_eq!(PathValue::Normal(11).to_string(), "11");
+    }
+
+    #[test]
+    fn to_string_hardened() {
+        assert_eq!(PathValue::Hardened(0).to_string(), "0'");
+        assert_eq!(PathValue::Hardened(1).to_string(), "1'");
+    }
 
     #[test]
     fn ok_for_small_values() {

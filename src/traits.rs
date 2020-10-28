@@ -1,4 +1,4 @@
-use crate::PathValue;
+use crate::{PathValue, CustomHDPath};
 use byteorder::{BigEndian, WriteBytesExt};
 
 /// General trait for an HDPath.
@@ -33,4 +33,71 @@ pub trait HDPath {
         buf
     }
 
+    ///
+    /// Get parent HD Path.
+    /// Return `None` if the current path is empty (i.e. already at the top)
+    fn parent(&self) -> Option<CustomHDPath> {
+        if self.len() == 0 {
+            return None
+        }
+        let len = self.len();
+        let mut parent_hd_path = Vec::with_capacity(len as usize - 1);
+        for i in 0..len - 1 {
+            parent_hd_path.push(self.get(i).unwrap());
+        }
+        let parent_hd_path = CustomHDPath::try_new(parent_hd_path)
+            .expect("No parent HD Path");
+        Some(parent_hd_path)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{StandardHDPath, AccountHDPath};
+    use std::str::FromStr;
+
+    #[test]
+    fn get_parent_from_std() {
+        let act = StandardHDPath::from_str("m/44'/0'/1'/1/2").unwrap();
+        let parent = act.parent();
+        assert!(parent.is_some());
+        let parent = parent.unwrap();
+        assert_eq!(
+            "m/44'/0'/1'/1", parent.to_string()
+        );
+    }
+
+    #[test]
+    fn get_parent_twice() {
+        let act = StandardHDPath::from_str("m/44'/0'/1'/1/2").unwrap();
+        let parent = act.parent().unwrap().parent();
+        assert!(parent.is_some());
+        let parent = parent.unwrap();
+        assert_eq!(
+            "m/44'/0'/1'", parent.to_string()
+        );
+    }
+
+    #[test]
+    fn get_parent_from_account() {
+        let act = AccountHDPath::from_str("m/84'/0'/1'").unwrap();
+        let parent = act.parent();
+        assert!(parent.is_some());
+        let parent = parent.unwrap();
+        assert_eq!(
+            "m/84'/0'", parent.to_string()
+        );
+    }
+
+    #[test]
+    fn get_parent_from_custom() {
+        let act = CustomHDPath::from_str("m/84'/0'/1'/0/16").unwrap();
+        let parent = act.parent();
+        assert!(parent.is_some());
+        let parent = parent.unwrap();
+        assert_eq!(
+            "m/84'/0'/1'/0", parent.to_string()
+        );
+    }
 }
