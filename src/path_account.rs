@@ -186,12 +186,12 @@ impl FromStr for AccountHDPath {
     }
 }
 
-impl ToString for AccountHDPath {
-    fn to_string(&self) -> String {
-        format!("m/{}'/{}'/{}'/x/x",
-                self.purpose.as_value().as_number(),
-                self.coin_type,
-                self.account,
+impl std::fmt::Display for AccountHDPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "m/{}'/{}'/{}'/x/x",
+               self.purpose.as_value().as_number(),
+               self.coin_type,
+               self.account,
         )
     }
 }

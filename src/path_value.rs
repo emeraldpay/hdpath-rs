@@ -79,11 +79,11 @@ impl From<PathValue> for ChildNumber {
     }
 }
 
-impl ToString for PathValue {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for PathValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PathValue::Normal(n) => n.to_string(),
-            PathValue::Hardened(n) => format!("{}'", n)
+            PathValue::Normal(n) => write!(f, "{}", n),
+            PathValue::Hardened(n) => write!(f, "{}'", n)
         }
     }
 }
@@ -126,6 +126,18 @@ mod tests {
     fn to_string_hardened() {
         assert_eq!(PathValue::Hardened(0).to_string(), "0'");
         assert_eq!(PathValue::Hardened(1).to_string(), "1'");
+    }
+
+    #[test]
+    fn display_normal() {
+        assert_eq!(format!("{}", PathValue::Normal(0)), "0");
+        assert_eq!(format!("{}", PathValue::Normal(11)), "11");
+    }
+
+    #[test]
+    fn display_hardened() {
+        assert_eq!(format!("{}", PathValue::Hardened(0)), "0'");
+        assert_eq!(format!("{}", PathValue::Hardened(11)), "11'");
     }
 
     #[test]

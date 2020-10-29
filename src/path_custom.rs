@@ -67,15 +67,13 @@ impl TryFrom<&str> for CustomHDPath {
     }
 }
 
-impl ToString for CustomHDPath {
-    fn to_string(&self) -> String {
-        let mut buf = String::new();
-        buf.push_str("m");
+impl std::fmt::Display for CustomHDPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "m")?;
         for pv in self.0.iter() {
-            buf.push('/');
-            buf.push_str(pv.to_string().as_str())
+            write!(f, "/{}", pv)?;
         }
-        buf
+        Ok(())
     }
 }
 

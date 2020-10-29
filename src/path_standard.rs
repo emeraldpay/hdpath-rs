@@ -4,6 +4,7 @@ use std::convert::{TryFrom, TryInto};
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
 use crate::traits::HDPath;
+use std::fmt;
 
 /// Standard HD Path for [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki),
 /// [BIP-49](https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki), [BIP-84](https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki)
@@ -220,14 +221,14 @@ impl FromStr for StandardHDPath {
     }
 }
 
-impl ToString for StandardHDPath {
-    fn to_string(&self) -> String {
-        format!("m/{}'/{}'/{}'/{}/{}",
-                self.purpose().as_value().as_number(),
-                self.coin_type(),
-                self.account(),
-                self.change(),
-                self.index()
+impl fmt::Display for StandardHDPath {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "m/{}'/{}'/{}'/{}/{}",
+               self.purpose().as_value().as_number(),
+               self.coin_type(),
+               self.account(),
+               self.change(),
+               self.index()
         )
     }
 }

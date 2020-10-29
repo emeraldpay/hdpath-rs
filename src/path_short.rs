@@ -4,6 +4,7 @@ use std::convert::TryFrom;
 use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
 use crate::traits::HDPath;
+use std::fmt;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ShortHDPath {
@@ -75,13 +76,13 @@ impl FromStr for ShortHDPath {
     }
 }
 
-impl ToString for ShortHDPath {
-    fn to_string(&self) -> String {
-        format!("m/{}'/{}'/{}'/{}",
-                self.purpose.as_value().as_number(),
-                self.coin_type,
-                self.account,
-                self.index
+impl fmt::Display for ShortHDPath {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "m/{}'/{}'/{}'/{}",
+               self.purpose.as_value().as_number(),
+               self.coin_type,
+               self.account,
+               self.index
         )
     }
 }
