@@ -67,6 +67,16 @@ impl TryFrom<&str> for CustomHDPath {
     }
 }
 
+impl std::convert::From<&dyn HDPath> for CustomHDPath {
+    fn from(value: &dyn HDPath) -> Self {
+        let mut path = Vec::with_capacity(value.len() as usize);
+        for i in 0..value.len() {
+            path.push(value.get(i).expect("no-path-element"));
+        }
+        CustomHDPath(path)
+    }
+}
+
 impl std::fmt::Display for CustomHDPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "m")?;
@@ -190,6 +200,7 @@ impl std::convert::From<&CustomHDPath> for DerivationPath {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::StandardHDPath;
 
     #[test]
     pub fn to_string() {
@@ -224,6 +235,15 @@ mod tests {
         assert_eq!(&PathValue::Hardened(0), act.0.get(2).unwrap());
         assert_eq!(&PathValue::Normal(0), act.0.get(3).unwrap());
         assert_eq!(&PathValue::Normal(0), act.0.get(4).unwrap());
+    }
+
+    #[test]
+    pub fn try_from_common_trait() {
+        let source = StandardHDPath::from_str("m/84'/0'/1'/2/3").unwrap();
+        let act = CustomHDPath::from(source.to_trait());
+        assert_eq!(
+            CustomHDPath::try_from("m/84'/0'/1'/2/3").unwrap(), act
+        );
     }
 
     #[test]

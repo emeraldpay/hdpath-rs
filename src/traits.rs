@@ -1,5 +1,7 @@
 use crate::{PathValue, CustomHDPath};
 use byteorder::{BigEndian, WriteBytesExt};
+#[cfg(feature = "with-bitcoin")]
+use bitcoin::util::bip32::{ChildNumber, DerivationPath};
 
 /// General trait for an HDPath.
 /// Common implementations are [`StandardHDPath`], [`AccountHDPath`] and [`CustomHDPath`]
@@ -51,11 +53,28 @@ pub trait HDPath {
     }
 }
 
+#[cfg(feature = "with-bitcoin")]
+impl std::convert::From<&dyn HDPath> for DerivationPath {
+    fn from(value: &dyn HDPath) -> Self {
+        let mut path = Vec::with_capacity(value.len() as usize);
+        for i in 0..value.len() {
+            path.push(ChildNumber::from(value.get(i).expect("no-path-element")));
+        }
+        DerivationPath::from(path)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{StandardHDPath, AccountHDPath};
     use std::str::FromStr;
+
+    impl StandardHDPath {
+        pub fn to_trait(&self) -> &dyn HDPath {
+            self
+        }
+    }
 
     #[test]
     fn get_parent_from_std() {
@@ -99,5 +118,22 @@ mod tests {
         assert_eq!(
             "m/84'/0'/1'/0", parent.to_string()
         );
+    }
+}
+
+#[cfg(all(test, feature = "with-bitcoin"))]
+mod tests_with_bitcoin {
+    use crate::{StandardHDPath};
+    use std::str::FromStr;
+    use bitcoin::util::bip32::{DerivationPath};
+
+    #[test]
+    fn convert_to_bitcoin() {
+        let source = StandardHDPath::from_str("m/44'/0'/1'/1/2").unwrap();
+        let act = DerivationPath::from(source.to_trait());
+        assert_eq!(
+            DerivationPath::from_str("m/44'/0'/1'/1/2").unwrap(),
+            act
+        )
     }
 }
