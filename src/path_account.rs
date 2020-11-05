@@ -18,16 +18,26 @@ use crate::traits::HDPath;
 /// ```
 /// use hdpath::{AccountHDPath, Purpose};
 ///
-/// //creates path m/84'/0'/0'/0/0
+/// //creates path m/84'/0'/0'
 /// let hd_account = AccountHDPath::new(Purpose::Witness, 0, 0);
 /// ```
 /// # Parse string
 /// ```
-/// use hdpath::{AccountHDPath, Purpose};
+/// use hdpath::{AccountHDPath};
 /// # use std::str::FromStr;
 ///
-/// //creates path m/84'/0'/0'/0/0
+/// //creates path m/84'/0'/0'
 /// let hd_account = AccountHDPath::from_str("m/84'/0'/0'").unwrap();
+/// ```
+///
+/// Internal type and index can be explicitly market as unused (which is the default format for converting it into a string).
+///
+/// ```
+/// use hdpath::{AccountHDPath};
+/// # use std::str::FromStr;
+///
+/// //creates path m/84'/0'/0'
+/// let hd_account = AccountHDPath::from_str("m/84'/0'/0'/x/x").unwrap();
 /// ```
 ///
 /// # Create actial path
@@ -181,7 +191,12 @@ impl FromStr for AccountHDPath {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let value = CustomHDPath::from_str(s)?;
+        let clean = if s.ends_with("/x/x") {
+            &s[0..s.len() - 4]
+        } else {
+            s
+        };
+        let value = CustomHDPath::from_str(clean)?;
         AccountHDPath::try_from(value)
     }
 }
@@ -250,6 +265,16 @@ mod tests {
     #[test]
     fn create_from_string() {
         let hd_account = AccountHDPath::from_str("m/84'/0'/5'");
+        assert!(hd_account.is_ok());
+        let hd_account = hd_account.unwrap();
+        assert_eq!(Purpose::Witness, hd_account.purpose);
+        assert_eq!(0, hd_account.coin_type);
+        assert_eq!(5, hd_account.account);
+    }
+
+    #[test]
+    fn create_from_acc_string() {
+        let hd_account = AccountHDPath::from_str("m/84'/0'/5'/x/x");
         assert!(hd_account.is_ok());
         let hd_account = hd_account.unwrap();
         assert_eq!(Purpose::Witness, hd_account.purpose);
