@@ -51,6 +51,29 @@ pub trait HDPath {
             .expect("No parent HD Path");
         Some(parent_hd_path)
     }
+
+    ///
+    /// Convert current to `CustomHDPath` structure
+    fn as_custom(&self) -> CustomHDPath {
+        let len = self.len();
+        let mut path = Vec::with_capacity(len as usize);
+        for i in 0..len {
+            path.push(self.get(i).unwrap());
+        }
+        CustomHDPath::try_new(path).expect("Invalid HD Path")
+    }
+
+    ///
+    /// Convert current to bitcoin lib type
+    #[cfg(feature = "with-bitcoin")]
+    fn as_bitcoin(&self) -> DerivationPath {
+        let len = self.len();
+        let mut path = Vec::with_capacity(len as usize);
+        for i in 0..len {
+            path.push(ChildNumber::from(self.get(i).unwrap()));
+        }
+        DerivationPath::from(path)
+    }
 }
 
 #[cfg(feature = "with-bitcoin")]
@@ -119,11 +142,25 @@ mod tests {
             "m/84'/0'/1'/0", parent.to_string()
         );
     }
+
+    #[test]
+    fn convert_account_to_custom() {
+        let src = AccountHDPath::from_str("m/84'/0'/1'").unwrap();
+        let act = src.as_custom();
+        assert_eq!(CustomHDPath::from_str("m/84'/0'/1'").unwrap(), act);
+    }
+
+    #[test]
+    fn convert_standard_to_custom() {
+        let src = StandardHDPath::from_str("m/84'/0'/1'/0/2").unwrap();
+        let act = src.as_custom();
+        assert_eq!(CustomHDPath::from_str("m/84'/0'/1'/0/2").unwrap(), act);
+    }
 }
 
 #[cfg(all(test, feature = "with-bitcoin"))]
 mod tests_with_bitcoin {
-    use crate::{StandardHDPath};
+    use crate::{StandardHDPath, HDPath};
     use std::str::FromStr;
     use bitcoin::util::bip32::{DerivationPath};
 
@@ -131,6 +168,16 @@ mod tests_with_bitcoin {
     fn convert_to_bitcoin() {
         let source = StandardHDPath::from_str("m/44'/0'/1'/1/2").unwrap();
         let act = DerivationPath::from(source.to_trait());
+        assert_eq!(
+            DerivationPath::from_str("m/44'/0'/1'/1/2").unwrap(),
+            act
+        )
+    }
+
+    #[test]
+    fn convert_to_bitcoin_directly() {
+        let source = StandardHDPath::from_str("m/44'/0'/1'/1/2").unwrap();
+        let act = source.as_bitcoin();
         assert_eq!(
             DerivationPath::from_str("m/44'/0'/1'/1/2").unwrap(),
             act
