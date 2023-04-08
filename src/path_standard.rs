@@ -26,7 +26,7 @@ use std::fmt;
 /// let hdpath = StandardHDPath::from_str("m/84'/0'/0'/0/0").unwrap();
 /// ```
 ///
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct StandardHDPath {
     purpose: Purpose,
     coin_type: u32,

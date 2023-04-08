@@ -6,7 +6,7 @@ use bitcoin::util::bip32::{ChildNumber};
 
 /// The purpose number, a first number in HD Path, which is supposed to be reference actual format. Supposed to be a hardened value
 /// See [BIP-43](https://github.com/bitcoin/bips/blob/master/bip-0043.mediawiki)
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub enum Purpose {
     None, //0'
     Pubkey, //44'

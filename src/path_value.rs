@@ -3,7 +3,7 @@ use bitcoin::util::bip32::ChildNumber;
 
 pub const FIRST_BIT: u32 = 0x80000000;
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum PathValue {
     Normal(u32),
     Hardened(u32),

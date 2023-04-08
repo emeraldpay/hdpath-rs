@@ -31,7 +31,7 @@ use crate::traits::HDPath;
 ///    PathValue::normal(0), PathValue::normal(0)
 /// ]).unwrap();
 /// ```
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct CustomHDPath(pub Vec<PathValue>);
 
 impl CustomHDPath {

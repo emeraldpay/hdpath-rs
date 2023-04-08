@@ -49,7 +49,7 @@ use crate::traits::HDPath;
 /// // gives hd path m/84'/0'/0'/0/4
 /// let hd_path: StandardHDPath = hd_account.address_at(0, 4).unwrap();
 /// ```
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct AccountHDPath {
     purpose: Purpose,
     coin_type: u32,

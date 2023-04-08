@@ -6,7 +6,7 @@ use std::str::FromStr;
 use crate::traits::HDPath;
 use std::fmt;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct ShortHDPath {
     pub purpose: Purpose,
     pub coin_type: u32,
