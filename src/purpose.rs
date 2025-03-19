@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use crate::{PathValue, Error};
 use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
-use bitcoin::util::bip32::{ChildNumber};
+use bitcoin::bip32::{ChildNumber};
 
 /// The purpose number, a first number in HD Path, which is supposed to be reference actual format. Supposed to be a hardened value
 /// See [BIP-43](https://github.com/bitcoin/bips/blob/master/bip-0043.mediawiki)

@@ -1,5 +1,5 @@
 #[cfg(feature = "with-bitcoin")]
-use bitcoin::util::bip32::ChildNumber;
+use bitcoin::bip32::ChildNumber;
 
 pub const FIRST_BIT: u32 = 0x80000000;
 
@@ -92,7 +92,7 @@ impl std::fmt::Display for PathValue {
 mod tests {
     use super::*;
     #[cfg(feature = "with-bitcoin")]
-    use bitcoin::util::bip32::ChildNumber;
+    use bitcoin::bip32::ChildNumber;
 
     #[test]
     #[cfg(feature = "with-bitcoin")]

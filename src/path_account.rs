@@ -1,7 +1,7 @@
 use crate::{Purpose, CustomHDPath, Error, PathValue, StandardHDPath};
 use std::convert::TryFrom;
 #[cfg(feature = "with-bitcoin")]
-use bitcoin::util::bip32::{ChildNumber, DerivationPath};
+use bitcoin::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
 use crate::traits::HDPath;
 
@@ -368,7 +368,7 @@ mod tests {
 mod tests_with_bitcoin {
     use super::*;
     use std::convert::TryFrom;
-    use bitcoin::util::bip32::ChildNumber;
+    use bitcoin::bip32::ChildNumber;
 
     #[test]
     pub fn convert_to_childnumbers() {

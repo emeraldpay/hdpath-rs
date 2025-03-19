@@ -1,7 +1,7 @@
 use crate::{Purpose, PathValue, Error, CustomHDPath};
 use std::convert::{TryFrom, TryInto};
 #[cfg(feature = "with-bitcoin")]
-use bitcoin::util::bip32::{ChildNumber, DerivationPath};
+use bitcoin::bip32::{ChildNumber, DerivationPath};
 use std::str::FromStr;
 use crate::traits::HDPath;
 use std::fmt;
@@ -277,7 +277,7 @@ impl std::convert::From<&StandardHDPath> for DerivationPath {
 mod tests {
     use super::*;
     use std::convert::TryFrom;
-    use rand::{thread_rng, Rng};
+    use rand::{Rng};
 
     #[test]
     pub fn from_custom() {
@@ -640,10 +640,10 @@ mod tests {
     #[test]
     pub fn test_random_conversion() {
         let range = |count: usize| {
-            let mut rng = thread_rng();
+            let mut rng = rand::rng();
             let mut result: Vec<u32> = Vec::with_capacity(count);
             for _i in 0..count {
-                result.push(rng.gen_range(0u32, 0x80000000u32));
+                result.push(rng.random_range(0u32..0x80000000u32));
             }
             result
         };
@@ -676,7 +676,7 @@ mod tests {
 mod tests_with_bitcoin {
     use super::*;
     use std::convert::TryFrom;
-    use bitcoin::util::bip32::ChildNumber;
+    use bitcoin::bip32::ChildNumber;
 
     #[test]
     pub fn convert_to_childnumbers() {

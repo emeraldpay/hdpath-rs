@@ -1,7 +1,7 @@
 use crate::{PathValue, CustomHDPath};
 use byteorder::{BigEndian, WriteBytesExt};
 #[cfg(feature = "with-bitcoin")]
-use bitcoin::util::bip32::{ChildNumber, DerivationPath};
+use bitcoin::bip32::{ChildNumber, DerivationPath};
 
 /// General trait for an HDPath.
 /// Common implementations are [`StandardHDPath`], [`AccountHDPath`] and [`CustomHDPath`]
@@ -162,7 +162,7 @@ mod tests {
 mod tests_with_bitcoin {
     use crate::{StandardHDPath, HDPath};
     use std::str::FromStr;
-    use bitcoin::util::bip32::{DerivationPath};
+    use bitcoin::bip32::{DerivationPath};
 
     #[test]
     fn convert_to_bitcoin() {
