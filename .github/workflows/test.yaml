@@ -72,6 +72,9 @@ jobs:
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: cobertura.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v1
+        with:
+          file: cobertura.xml
