@@ -68,10 +68,6 @@ jobs:
           command: tarpaulin
           args: --no-fail-fast --all-features --out xml
 
-      - name: Coverage Report
-        id: coverage
-        uses: actions-rs/grcov@v0.1.5
-
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@master
         with:
