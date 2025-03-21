@@ -64,7 +64,8 @@ jobs:
         env:
           CARGO_INCREMENTAL: '0'
           RUSTFLAGS: '-Cinstrument-coverage -Zcoverage-options=branch -Ccodegen-units=1 -Clink-dead-code -Coverflow-checks=off'
-          RUSTDOCFLAGS: '-Cinstrument-coverage -Zcoverage-options=branch -Ccodegen-units=1 -Clink-dead-code -Coverflow-checks=off'
+          RUSTDOCFLAGS: '-Cpanic=abort'
+          LLVM_PROFILE_FILE: "hdpath-%p-%m.profraw"
 
       - name: Coverage Report
         id: coverage
