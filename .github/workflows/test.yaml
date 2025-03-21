@@ -53,7 +53,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           override: true
 
       - name: Setup Tarpaulin
@@ -65,8 +65,8 @@ jobs:
       - name: Test
         uses: actions-rs/cargo@v1
         with:
-          command: test
-          args: tarpaulin --no-fail-fast --all-features --out xml
+          command: tarpaulin
+          args: --no-fail-fast --all-features --out xml
 
       - name: Coverage Report
         id: coverage
