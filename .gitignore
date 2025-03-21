@@ -1,3 +1,6 @@
 /target
 **/*.rs.bk
 *.iml
+*.html
+*.profraw
+cobertura.xml

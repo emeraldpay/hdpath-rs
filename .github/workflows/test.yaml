@@ -1,11 +1,10 @@
 name: Test
 
 on:
-  # if pushed directly to the master
   push:
     branches:
       - master
-  # on a pull request
+      - ci/*
   pull_request:
     branches:
       - master
@@ -19,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -49,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -57,27 +56,26 @@ jobs:
           toolchain: nightly
           override: true
 
+      - name: Setup Tarpaulin
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-tarpaulin
+
       - name: Test
         uses: actions-rs/cargo@v1
         with:
-          command: test
-          args: --no-fail-fast --all-features
-        env:
-          CARGO_INCREMENTAL: '0'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-
-      - name: Coverage Report
-        id: coverage
-        uses: actions-rs/grcov@v0.1
+          command: tarpaulin
+          args: --no-fail-fast --all-features --out xml
 
       - name: Upload to Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ${{ steps.coverage.outputs.report }}
+          file: cobertura.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v1
         with:
-          file: ${{ steps.coverage.outputs.report }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: cobertura.xml
