@@ -69,10 +69,10 @@ jobs:
           args: --no-fail-fast --all-features --out xml
 
       - name: Upload to Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: cobertura.xml
+          file: cobertura.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v1
