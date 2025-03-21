@@ -77,4 +77,5 @@ jobs:
       - name: Upload to Codecov
         uses: codecov/codecov-action@v1
         with:
-          file: cobertura.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: cobertura.xml
