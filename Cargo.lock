@@ -146,7 +146,7 @@ dependencies = [
 
 [[package]]
 name = "hdpath"
-version = "0.7.0-dev"
+version = "0.7.0"
 dependencies = [
  "bitcoin",
  "byteorder",
